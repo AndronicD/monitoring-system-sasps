@@ -1,31 +1,37 @@
 # Monitoring System - SASPS
 
-M1 foundation for a computational resource monitoring system: a monitored Java
-web server and a metric service running in the same JVM. It measures the
-resources of the Java process and of the host machine.
+Java web server that monitors its own process and the host machine:
+CPU, RAM, network, JVM heap, GC. Samples every second, pushes each
+sample to subscribers, keeps the last 60, serves them over HTTP.
 
-## What it does so far
+Needs JDK 17+, Bash, and Python 3.9+ for the demo. No other dependencies.
 
-- Collects 14 real metrics: host CPU, process CPU, host RAM, network rx/tx,
-  JVM heap and non-heap, GC collection count and time.
-- Samples periodically and builds one immutable `Sample` per tick.
-- Pushes each sample to subscribers (Observer, no polling loop).
-- Keeps a bounded in-memory history of the last 60 samples.
-- Exposes everything over a plain JDK HTTP server, plus a small CPU workload
-  endpoint to drive a demo.
-- Ships 47 self-contained checks and a reproducible end-to-end demo.
+## Run
 
-When a source is unavailable the JSON value is `null` with an
-`unavailableReason` - never a fabricated zero.
+    bash scripts/build.sh
+    bash scripts/run.sh --port 8080
 
-Not built yet: the SPI/factory collector registry, the pooled ring buffer, the
-antipattern variants and the comparative experiments# Monitoring System - rd
-M1 foundation for a compul iweb server and a metric service running in the same JVM. It measures the
-resothresources of the Java process and of the host machine.
+    curl -sS http://127.0.0.1:8080/metrics
+    curl -sS 'http://127.0.0.1:8080/work?iterations=500000'
 
-## What it doeset
-## What it does so far
+## Test
 
-- Collects 14 real metrics: ere
-- Collects 14 real mlab  JVM heap and non-heap, GC collection count and time.
-- Samples periodica -- Samples periodically and builds o
+    bash scripts/test.sh
+    python3 scripts/demo.py
+
+## Endpoints
+
+| GET | Returns |
+|---|---|
+| `/health` | 503 until the first sample, then 200 |
+| `/metadata` | Source, unit and meaning of each metric |
+| `/metrics` | Latest sample |
+| `/history` | Last 60 samples |
+| `/work?iterations=N` | Burns CPU so you can watch the numbers move |
+
+Unavailable readings are `null` with a reason, never a fake zero.
+
+## Code
+
+`src/main/java/ro/sasps/monitoring/` - collectors, `MetricService`
+(scheduler), `SampleBus` (push), `SampleHistory` (bounded), `MonitorServer`.
