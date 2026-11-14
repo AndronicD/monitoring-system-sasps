@@ -1,4 +1,9 @@
-package ro.sasps.monitoring;
+package sasps.monitoring;
+
+import sasps.monitoring.model.*;
+import sasps.monitoring.collectors.*;
+import sasps.monitoring.store.*;
+
 
 import java.io.IOException;
 import java.net.URI;

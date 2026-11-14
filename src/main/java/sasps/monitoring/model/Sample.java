@@ -1,4 +1,4 @@
-package ro.sasps.monitoring;
+package sasps.monitoring.model;
 
 import java.time.Instant;
 import java.util.Collections;

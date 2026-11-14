@@ -1,4 +1,6 @@
-package ro.sasps.monitoring;
+package sasps.monitoring.collectors;
+
+import sasps.monitoring.model.*;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;

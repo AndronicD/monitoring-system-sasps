@@ -1,4 +1,4 @@
-package ro.sasps.monitoring;
+package sasps.monitoring.model;
 
 public record Reading(Double value, String unavailableReason) {
     public Reading {

@@ -33,5 +33,5 @@ Unavailable readings are `null` with a reason, never a fake zero.
 
 ## Code
 
-`src/main/java/ro/sasps/monitoring/` - collectors, `MetricService`
+`src/main/java/sasps/monitoring/` - collectors, `MetricService`
 (scheduler), `SampleBus` (push), `SampleHistory` (bounded), `MonitorServer`.

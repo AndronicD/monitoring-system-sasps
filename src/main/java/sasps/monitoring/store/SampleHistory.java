@@ -1,4 +1,6 @@
-package ro.sasps.monitoring;
+package sasps.monitoring.store;
+
+import sasps.monitoring.model.*;
 
 import java.util.ArrayDeque;
 import java.util.List;

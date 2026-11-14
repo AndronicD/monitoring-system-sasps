@@ -1,4 +1,6 @@
-package ro.sasps.monitoring;
+package sasps.monitoring.collectors;
+
+import sasps.monitoring.model.*;
 
 import com.sun.management.OperatingSystemMXBean;
 import java.lang.management.ManagementFactory;
