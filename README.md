@@ -35,5 +35,3 @@ Unavailable readings are `null` with a reason, never a fake zero.
 
 `src/main/java/ro/sasps/monitoring/` - collectors, `MetricService`
 (scheduler), `SampleBus` (push), `SampleHistory` (bounded), `MonitorServer`.
-
-Network collection works on Linux and macOS only.
