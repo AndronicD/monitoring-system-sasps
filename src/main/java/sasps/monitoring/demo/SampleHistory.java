@@ -1,6 +1,6 @@
-package sasps.monitoring.store;
+package sasps.monitoring.demo;
 
-import sasps.monitoring.model.*;
+import sasps.contracts.Sample;
 
 import java.util.ArrayDeque;
 import java.util.List;

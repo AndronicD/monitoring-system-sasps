@@ -1,9 +1,8 @@
-package sasps.monitoring;
+package sasps.monitoring.demo;
 
-import sasps.monitoring.model.*;
-import sasps.monitoring.collectors.*;
-import sasps.monitoring.store.*;
-
+import sasps.contracts.MetricCollector;
+import sasps.contracts.Reading;
+import sasps.contracts.Sample;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;

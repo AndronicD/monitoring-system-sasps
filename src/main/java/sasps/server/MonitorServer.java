@@ -1,9 +1,8 @@
-package sasps.monitoring;
+package sasps.server;
 
-import sasps.monitoring.model.*;
-import sasps.monitoring.collectors.*;
-import sasps.monitoring.store.*;
-
+import sasps.contracts.Sample;
+import sasps.monitoring.demo.MetricService;
+import sasps.monitoring.demo.SampleHistory;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -25,12 +24,12 @@ public final class MonitorServer implements AutoCloseable {
     private final String metadata;
     private final AtomicLong workRequests = new AtomicLong();
 
-    public MonitorServer(int port, SampleHistory history, MetricService service, String metadata)
-            throws IOException {
+    public MonitorServer(String bindAddress, int port, SampleHistory history, MetricService service,
+                         String metadata) throws IOException {
         this.history = history;
         this.service = service;
         this.metadata = metadata;
-        server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 32);
+        server = HttpServer.create(new InetSocketAddress(bindAddress, port), 32);
         server.setExecutor(executor);
         server.createContext("/", this::handle);
     }

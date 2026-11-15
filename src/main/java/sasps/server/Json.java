@@ -1,9 +1,9 @@
-package sasps.monitoring;
+package sasps.server;
 
-import sasps.monitoring.model.*;
-import sasps.monitoring.collectors.*;
-import sasps.monitoring.store.*;
-
+import sasps.contracts.Metric;
+import sasps.contracts.MetricCollector;
+import sasps.contracts.Reading;
+import sasps.contracts.Sample;
 
 import java.util.List;
 import java.util.Map;
@@ -58,10 +58,7 @@ public final class Json {
 
     public static String metadata(List<MetricCollector> collectors, int intervalMs,
                                   int historyCapacity, String interfaceName) {
-        String metrics = collectors.stream().flatMap(c -> c.metrics().stream()).map(m ->
-            "{\"id\":" + quote(m.id()) + ",\"unit\":" + quote(m.unit())
-                + ",\"scope\":" + quote(m.scope()) + ",\"source\":" + quote(m.source())
-                + ",\"meaning\":" + quote(m.meaning()) + "}")
+        String metrics = collectors.stream().flatMap(c -> c.metrics().stream()).map(Json::metric)
             .collect(Collectors.joining(",", "[", "]"));
         return "{\"samplingDelayMs\":" + intervalMs + ",\"historyCapacity\":" + historyCapacity
             + ",\"networkInterface\":" + quote(interfaceName)
@@ -70,5 +67,11 @@ public final class Json {
             + ",\"logicalProcessors\":" + Runtime.getRuntime().availableProcessors()
             + ",\"processNetwork\":\"unavailable: no per-process network counters in standard JDK\""
             + ",\"metrics\":" + metrics + "}";
+    }
+
+    private static String metric(Metric metric) {
+        return "{\"id\":" + quote(metric.id()) + ",\"unit\":" + quote(metric.unit())
+            + ",\"scope\":" + quote(metric.scope()) + ",\"source\":" + quote(metric.source())
+            + ",\"meaning\":" + quote(metric.meaning()) + "}";
     }
 }
