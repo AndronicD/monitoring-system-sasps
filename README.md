@@ -1,7 +1,7 @@
 # Monitoring System - SASPS
 
 Java web server that monitors its own process and the host machine:
-CPU, RAM, network, JVM heap, GC. Samples every second, pushes each
+CPU, RAM, network, JVM heap, GC, JVM uptime. Samples every second, pushes each
 sample to subscribers, keeps the last 60, serves them over HTTP.
 
 Needs JDK 17+, Bash, and Python 3.9+ for the demo. No other dependencies.
@@ -30,6 +30,16 @@ Needs JDK 17+, Bash, and Python 3.9+ for the demo. No other dependencies.
 | `/work?iterations=N` | Burns CPU so you can watch the numbers move |
 
 Unavailable readings are `null` with a reason, never a fake zero.
+
+## JVM uptime
+
+`jvm.uptime.ms` reports elapsed time since JVM start in milliseconds, using
+`RuntimeMXBean.getUptime()`. It has process scope and is included in `/metrics`
+and `/history`, with its definition in `/metadata`.
+
+This is not host uptime or time since sampling began. It restarts from zero
+when the JVM restarts. The demo checks that uptime advances under load and does
+not decrease across retained samples.
 
 ## Code
 

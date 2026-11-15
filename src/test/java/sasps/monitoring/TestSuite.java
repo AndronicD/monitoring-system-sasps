@@ -6,6 +6,8 @@ import sasps.monitoring.store.*;
 
 
 import java.io.IOException;
+import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -16,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class TestSuite {
     private static int checks;
@@ -25,6 +28,7 @@ public final class TestSuite {
 
     public static void main(String[] args) throws Exception {
         readingsAndJson();
+        uptimeMetrics();
         networkParsers();
         observerAndHistory();
         serviceAndHttp();
@@ -47,6 +51,39 @@ public final class TestSuite {
             Map.of("x", Reading.unavailable("not supported")));
         check(Json.sample(unavailable).contains("\"value\":null"), "JSON unavailable reading");
         expect(UnsupportedOperationException.class, () -> sample(1).readings().clear());
+    }
+
+    private static void uptimeMetrics() {
+        AtomicLong uptime = new AtomicLong();
+        RuntimeMXBean runtime = RuntimeMXBean.class.cast(Proxy.newProxyInstance(
+            RuntimeMXBean.class.getClassLoader(), new Class<?>[] {RuntimeMXBean.class},
+            (proxy, method, args) -> {
+                if (method.getName().equals("getUptime")) {
+                    return uptime.get();
+                }
+                throw new AssertionError("Unexpected RuntimeMXBean call: " + method.getName());
+            }));
+        MetricCollector collector = new UptimeCollector(runtime);
+        check(collector.metrics().equals(List.of(new Metric("jvm.uptime.ms", "ms", "process",
+            "RuntimeMXBean.getUptime",
+            "Elapsed time since JVM start, not host uptime or time since monitoring began"))),
+            "Uptime metadata");
+        check(collector.collect(0).equals(Map.of("jvm.uptime.ms", Reading.available(0))),
+            "Zero uptime is available");
+        uptime.set(12_345);
+        check(collector.collect(0).equals(Map.of("jvm.uptime.ms", Reading.available(12_345))),
+            "Uptime comes from the JVM in milliseconds");
+        uptime.set(3_000_000_000L);
+        SampleHistory history = new SampleHistory(2);
+        SampleBus bus = new SampleBus();
+        bus.subscribe(history);
+        try (MetricService service = new MetricService(List.of(collector), bus, 1000)) {
+            service.sampleOnce();
+            check(history.latest().readings().get("jvm.uptime.ms").value() == 3_000_000_000.0,
+                "Uptime preserves values beyond integer range");
+            check(Json.sample(history.latest()).contains("\"jvm.uptime.ms\":{\"value\":3.0E9,"
+                + "\"unavailableReason\":null}"), "Uptime is serialized as an available JSON number");
+        }
     }
 
     private static void networkParsers() throws Exception {
