@@ -7,6 +7,7 @@ import sasps.monitoring.store.*;
 
 import java.io.IOException;
 import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -15,6 +16,7 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +31,7 @@ public final class TestSuite {
     public static void main(String[] args) throws Exception {
         readingsAndJson();
         uptimeMetrics();
+        threadMetrics();
         networkParsers();
         observerAndHistory();
         serviceAndHttp();
@@ -83,6 +86,35 @@ public final class TestSuite {
                 "Uptime preserves values beyond integer range");
             check(Json.sample(history.latest()).contains("\"jvm.uptime.ms\":{\"value\":3.0E9,"
                 + "\"unavailableReason\":null}"), "Uptime is serialized as an available JSON number");
+        }
+    }
+
+    private static void threadMetrics() {
+        ThreadMXBean threads = ThreadMXBean.class.cast(Proxy.newProxyInstance(
+            ThreadMXBean.class.getClassLoader(), new Class<?>[] {ThreadMXBean.class},
+            (proxy, method, args) -> switch (method.getName()) {
+                case "getThreadCount" -> 12;
+                case "getDaemonThreadCount" -> 7;
+                case "getPeakThreadCount" -> 20;
+                case "getTotalStartedThreadCount" -> 123L;
+                default -> throw new AssertionError("Unexpected ThreadMXBean call: " + method.getName());
+            }));
+        MetricCollector collector = new ThreadCollector(threads);
+        Map<String, Reading> readings = collector.collect(0);
+        check(readings.equals(Map.of(
+            "jvm.threads.live", Reading.available(12),
+            "jvm.threads.daemon", Reading.available(7),
+            "jvm.threads.peak", Reading.available(20),
+            "jvm.threads.started.total", Reading.available(123))), "Thread counter mapping");
+        List<Metric> metrics = collector.metrics();
+        check(metrics.size() == 4, "Four thread metric definitions");
+        check(readings.keySet().equals(Set.copyOf(metrics.stream().map(Metric::id).toList())),
+            "Thread metadata matches readings");
+        for (Metric metric : metrics) {
+            check(metric.unit().equals("threads"), "Thread metric unit: " + metric.id());
+            check(metric.scope().equals("process"), "Thread metric scope: " + metric.id());
+            check(metric.source().startsWith("ThreadMXBean."), "Thread metric source: " + metric.id());
+            check(!metric.meaning().isBlank(), "Thread metric meaning: " + metric.id());
         }
     }
 

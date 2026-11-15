@@ -91,7 +91,7 @@ def main():
             require(requests > 0 and health["workRequests"] == requests, "Request count mismatch")
             require(len(history) <= metadata["historyCapacity"], "History exceeded its bound")
             require(after["sequence"] > before["sequence"], "Sampling did not advance under HTTP load")
-            require(len(metadata["metrics"]) == 15, "Expected 15 resource metrics")
+            require(len(metadata["metrics"]) == 19, "Expected 19 resource metrics")
             expected_ids = {metric["id"] for metric in metadata["metrics"]}
             require(set(after["readings"]) == expected_ids, "Metric metadata and readings differ")
             unavailable = {}
@@ -103,7 +103,9 @@ def main():
                     require(math.isfinite(reading["value"]) and reading["value"] >= 0,
                             f"Invalid real reading: {metric}")
             for metric in ("host.ram.total.bytes", "host.ram.used.bytes", "jvm.heap.used.bytes",
-                           "jvm.gc.collections.total", "host.network.rx.bytes.total", "jvm.uptime.ms"):
+                           "jvm.gc.collections.total", "host.network.rx.bytes.total",
+                           "jvm.threads.live", "jvm.threads.daemon", "jvm.threads.peak",
+                           "jvm.threads.started.total", "jvm.uptime.ms"):
                 require(after["readings"][metric]["value"] is not None,
                         f"Required demo source unavailable: {metric}")
             uptime_before = before["readings"]["jvm.uptime.ms"]["value"]
