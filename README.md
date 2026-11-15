@@ -1,7 +1,7 @@
 # Monitoring System - SASPS
 
 Java web server that monitors its own process and the host machine:
-CPU, RAM, network, JVM heap, GC. Samples every second, pushes each
+CPU, RAM, network, JVM heap, GC, JVM threads. Samples every second, pushes each
 sample to subscribers, keeps the last 60, serves them over HTTP.
 
 Needs JDK 17+, Bash, and Python 3.9+ for the demo. No other dependencies.
@@ -30,6 +30,22 @@ Needs JDK 17+, Bash, and Python 3.9+ for the demo. No other dependencies.
 | `/work?iterations=N` | Burns CPU so you can watch the numbers move |
 
 Unavailable readings are `null` with a reason, never a fake zero.
+
+## JVM thread metrics
+
+The following metrics are included in `/metrics` and `/history`, with definitions
+in `/metadata`. All use `ThreadMXBean`, have process scope, and are measured in
+threads.
+
+| Metric | Meaning |
+|---|---|
+| `jvm.threads.live` | Current live threads, including daemon and non-daemon threads |
+| `jvm.threads.daemon` | Current live daemon threads |
+| `jvm.threads.peak` | Peak live threads since JVM start or the last peak-count reset |
+| `jvm.threads.started.total` | All threads started since JVM start, including terminated threads |
+
+These are platform-thread counts, not virtual-thread counts. Counters are read
+independently, so a sample is not an atomic snapshot of thread activity.
 
 ## Code
 
