@@ -1,4 +1,4 @@
-package sasps.monitoring.model;
+package sasps.contracts;
 
 import java.time.Instant;
 import java.util.Collections;

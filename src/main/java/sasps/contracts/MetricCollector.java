@@ -1,6 +1,4 @@
-package sasps.monitoring.collectors;
-
-import sasps.monitoring.model.*;
+package sasps.contracts;
 
 import java.util.List;
 import java.util.Map;

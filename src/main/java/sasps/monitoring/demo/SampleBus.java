@@ -1,9 +1,6 @@
-package sasps.monitoring;
+package sasps.monitoring.demo;
 
-import sasps.monitoring.model.*;
-import sasps.monitoring.collectors.*;
-import sasps.monitoring.store.*;
-
+import sasps.contracts.Sample;
 
 import java.util.ArrayList;
 import java.util.List;

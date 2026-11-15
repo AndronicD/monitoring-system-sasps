@@ -1,6 +1,8 @@
-package sasps.monitoring.collectors;
+package sasps.metrics;
 
-import sasps.monitoring.model.*;
+import sasps.contracts.Metric;
+import sasps.contracts.MetricCollector;
+import sasps.contracts.Reading;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
