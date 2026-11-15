@@ -91,7 +91,7 @@ def main():
             require(requests > 0 and health["workRequests"] == requests, "Request count mismatch")
             require(len(history) <= metadata["historyCapacity"], "History exceeded its bound")
             require(after["sequence"] > before["sequence"], "Sampling did not advance under HTTP load")
-            require(len(metadata["metrics"]) == 18, "Expected 18 resource metrics")
+            require(len(metadata["metrics"]) == 19, "Expected 19 resource metrics")
             expected_ids = {metric["id"] for metric in metadata["metrics"]}
             require(set(after["readings"]) == expected_ids, "Metric metadata and readings differ")
             unavailable = {}
@@ -105,9 +105,18 @@ def main():
             for metric in ("host.ram.total.bytes", "host.ram.used.bytes", "jvm.heap.used.bytes",
                            "jvm.gc.collections.total", "host.network.rx.bytes.total",
                            "jvm.threads.live", "jvm.threads.daemon", "jvm.threads.peak",
-                           "jvm.threads.started.total"):
+                           "jvm.threads.started.total", "jvm.uptime.ms"):
                 require(after["readings"][metric]["value"] is not None,
                         f"Required demo source unavailable: {metric}")
+            uptime_before = before["readings"]["jvm.uptime.ms"]["value"]
+            uptime_after = after["readings"]["jvm.uptime.ms"]["value"]
+            require(uptime_before is not None and uptime_after > uptime_before,
+                    "JVM uptime did not advance under HTTP load")
+            uptimes = [sample["readings"]["jvm.uptime.ms"]["value"] for sample in history]
+            require(all(value is not None and math.isfinite(value) and value >= 0 for value in uptimes),
+                    "Invalid JVM uptime in history")
+            require(all(left <= right for left, right in zip(uptimes, uptimes[1:])),
+                    "JVM uptime decreased in history")
             network_delta = after["readings"]["host.network.rx.bytes.total"]["value"] \
                 - before["readings"]["host.network.rx.bytes.total"]["value"]
             require(network_delta > 0, "Loopback counters did not record actual HTTP traffic")
@@ -130,6 +139,9 @@ def main():
                              "requests": requests, "durationSeconds": workload_seconds,
                              "scratchBytesPerRequest": 262144},
                 "observations": {
+                    "jvmUptimeBeforeMs": uptime_before,
+                    "jvmUptimeAfterMs": uptime_after,
+                    "jvmUptimeDeltaMs": uptime_after - uptime_before,
                     "peakProcessCpuPercentOfMachineCapacity": peak_cpu,
                     "hostLoopbackReceivedBytesDelta": network_delta,
                     "gcCollectionsDelta": after["readings"]["jvm.gc.collections.total"]["value"]

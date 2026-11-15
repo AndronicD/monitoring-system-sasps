@@ -36,7 +36,8 @@ public final class Main {
         }
         String interfaceName = NetworkCollector.selectInterface(requestedInterface);
         List<MetricCollector> collectors = List.of(new CpuCollector(os), new MemoryCollector(os),
-            new GcCollector(), new ThreadCollector(ManagementFactory.getThreadMXBean()),
+            new GcCollector(), new UptimeCollector(ManagementFactory.getRuntimeMXBean()),
+            new ThreadCollector(ManagementFactory.getThreadMXBean()),
             new NetworkCollector(interfaceName));
         SampleBus bus = new SampleBus();
         SampleHistory history = new SampleHistory(60);
